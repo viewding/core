@@ -1,0 +1,29 @@
+{
+  "name": "viewding",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/index.esm.min.js",
+  "type": "module",
+  "types": "dist/development/index.d.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "rollup -c rollup.config.js"
+  },
+  "author": "yangwugui",
+  "license": "MIT",
+  "devDependencies": {
+    "@rollup/plugin-terser": "^0.4.3",
+    "@rollup/plugin-typescript": "^11.1.1",
+    "rollup": "^3.23.0",
+    "typedoc": "^0.25.1",
+    "typedoc-plugin-markdown": "^3.16.0",
+    "typescript": "^5.0.4"
+  },
+  "dependencies": {
+    "@viewding/lit-html": "^3.0.0",
+    "@viewding/reactivity": "^3.3.4",
+    "browserslist": "^4.21.9",
+    "lightningcss-wasm": "^1.21.5",
+    "tslib": "^2.6.2"
+  }
+}

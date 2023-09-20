@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" href="/favicon.png" />
+		<meta name="viewport" content="width=device-width" />
+		<script src="https://unpkg.com/viewding@1/dist/viewding.global.js"></script>
+	</head>
+	<body style="margin: 2em;">
+		<div id="app"></div>
+		<script>
+			const { html, mount, reactiveRef } = viewding
+
+			const counter = reactiveRef(0)
+
+			function template(){
+				return html`<button @click=${()=>counter.value = counter.value + 1} >CLICK Times: ${counter.value}</button>`
+			}
+
+			mount("#app",template)
+		</script>
+	</body>
+</html>

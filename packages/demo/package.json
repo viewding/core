@@ -1,0 +1,30 @@
+{
+  "name": "koa",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/server/main.ts",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.2.5",
+    "sass": "^1.62.1",
+    "vite": "^4.3.9"
+  },
+  "dependencies": {
+    "@viewding/reactivity": "^3.3.4",
+    "bootstrap": "^5.3.0",
+    "browserslist": "^4.21.9",
+    "highlight.js": "^11.8.0",
+    "lightningcss-wasm": "^1.21.5",
+    "lodash-es": "^4.17.21",
+    "marked": "^5.0.4",
+    "napi-wasm": "^1.0.1"
+  }
+}

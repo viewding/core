@@ -1,0 +1,24 @@
+{
+	"compilerOptions": {
+		"isolatedModules": true,
+		"moduleResolution":"node",
+		"resolveJsonModule": true,
+		"allowJs": true,
+		"checkJs": false,
+		"useDefineForClassFields": false,
+		"esModuleInterop": true,
+		"forceConsistentCasingInFileNames": true,
+		"skipLibCheck": true,
+		"sourceMap": true,
+		"strict": true,
+		"experimentalDecorators":true,
+		"target": "esnext",
+		"module": "esnext",
+		"outDir": "./dist/development",
+		"declaration": true,
+		"declarationMap": true,
+		"lib":["dom","ESNext","DOM.Iterable"]	
+	},
+	"include": ["src/*.ts","src/decorators/*.ts","src/dom/*.ts"],
+	"exclude": ["node_modules"]
+}
