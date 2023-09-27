@@ -2,7 +2,6 @@ import { html, reactive, defineElement, reactiveElement, mount } from 'viewding'
 
 @defineElement('todo-item', 'li')
 export class TodoItem extends reactiveElement(HTMLLIElement) {
-    // 不需要作为元素的attribute，所以直接定义为reactive对象即可。
     todo = reactive({ text: '' })
 
     render() {
@@ -10,18 +9,19 @@ export class TodoItem extends reactiveElement(HTMLLIElement) {
     }
 }
 
-const todoList = reactive([
-    { id: 0, text: 'Vegetables' },
-    { id: 1, text: 'Cheese' },
-    { id: 2, text: 'Whatever else humans are supposed to eat' },
-])
+@defineElement('todo-list', 'ol')
+export class TodoList extends reactiveElement(HTMLOListElement) {
+    todoList = reactive([
+        { id: 0, text: 'Vegetables' },
+        { id: 1, text: 'Cheese' },
+        { id: 2, text: 'Whatever else humans are supposed to eat' },
+    ])
 
-function template() {
-    return html`
-        ${todoList.map(
-            (todo) => html`<li is="todo-item" .todo=${todo}></li>`
-        )}
-    `
+    template() {
+        return html`
+            ${this.todoList.map(
+                (todo) => html`<li is="todo-item" .todo=${todo}></li>`
+            )}
+        `
+    }
 }
-
-mount(document.body,template)

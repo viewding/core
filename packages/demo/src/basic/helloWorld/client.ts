@@ -1,10 +1,9 @@
-import { mount } from 'viewding';
-import { html } from '@viewding/lit-html';
+import { reactiveRef, html, mount } from 'viewding';
 
-const message='Hello World!'
+const message = reactiveRef('Hello World!')
 
 function template(){
-    return html`<h1>${message}</h1>`
+    return html`<h1>${message.value}</h1>`
 }
 
-mount(document.body,template)
+mount("#app", template)

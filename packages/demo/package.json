@@ -18,13 +18,14 @@
     "vite": "^4.3.9"
   },
   "dependencies": {
-    "@viewding/reactivity": "^3.3.4",
+    "@vue/reactivity": "^3.3.4",
     "bootstrap": "^5.3.0",
     "browserslist": "^4.21.9",
     "highlight.js": "^11.8.0",
     "lightningcss-wasm": "^1.21.5",
     "lodash-es": "^4.17.21",
     "marked": "^5.0.4",
-    "napi-wasm": "^1.0.1"
+    "napi-wasm": "^1.0.1",
+    "playground-elements": "^0.18.1"
   }
 }

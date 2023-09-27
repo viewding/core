@@ -1,4 +1,4 @@
-import { html,reactiveRef, mount, radio, effect } from 'viewding'
+import { html,reactiveRef, mount, radio, effect, attachCss, css } from 'viewding'
 
 const API_URL = `https://api.github.com/repos/vuejs/core/commits?per_page=3&sha=`
 const branches = ['main', 'v2-compat']
@@ -60,21 +60,22 @@ function template() {
                 `
             })}
         </ul>
-        <style>
-            a {
-                text-decoration: none;
-                color: #42b883;
-            }
-            li {
-                line-height: 1.5em;
-                margin-bottom: 20px;
-            }
-            .author,
-            .date {
-                font-weight: bold;
-            }
-        </style>
     `
 }
 
-mount(document.body, template)
+attachCss(css`
+    a {
+        text-decoration: none;
+        color: #42b883;
+    }
+    li {
+        line-height: 1.5em;
+        margin-bottom: 20px;
+    }
+    .author,
+    .date {
+        font-weight: bold;
+    }
+`)
+
+mount("#app", template)

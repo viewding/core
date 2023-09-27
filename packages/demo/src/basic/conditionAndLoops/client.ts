@@ -25,4 +25,4 @@ const template = ()=>{
     `
 }
 
-mount(document.body,template)
+mount("#app",template)

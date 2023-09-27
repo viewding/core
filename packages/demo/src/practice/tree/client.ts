@@ -1,4 +1,4 @@
-import { html, mount } from 'viewding';
+import { attachCss, html, mount,css } from 'viewding';
 import './treeItem'
 
 const treeData = {
@@ -30,17 +30,17 @@ function template(){
     <ul>
         <li is='tree-item' class="item" .model=${treeData}></li>
     </ul>
-
-    <style>
-    .item {
-    cursor: pointer;
-    line-height: 1.5;
-    }
-    .bold {
-    font-weight: bold;
-    }
-    </style>
     `
 }
 
-mount(document.body,template)
+attachCss(css`
+  .item {
+    cursor: pointer;
+    line-height: 1.5;
+  }
+  .bold {
+    font-weight: bold;
+  }
+`)
+
+mount("#app",template)

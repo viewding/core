@@ -1,4 +1,4 @@
-import { reactive, reactiveRef, mount, html, classMap, styleMap } from 'viewding'
+import { reactive, reactiveRef, mount, html, classMap, styleMap, attachCss, css } from 'viewding'
 
 const message = reactiveRef('Hello World!')
 
@@ -39,12 +39,13 @@ function template() {
             This should be green, and should toggle between green and blue on
             click.
         </p>
-        <style>
-            .red {
-                color: red;
-            }
-        </style>
     `
 }
 
-mount(document.body, template)
+attachCss(css`
+    .red {
+        color: red;
+    }
+`)
+
+mount("#app", template)

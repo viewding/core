@@ -11,6 +11,7 @@ function template(){
     return html`
     <h2>Text Input</h2>
     <input .value=${value(text)}> TEXT: ${text()}
+    <textarea .value=${value(text)}></textarea> TEXT: ${text()}
 
     <h2>Checkbox</h2>
     <input type="checkbox" id="checkbox" .checked=${value(checked)}>
@@ -56,4 +57,4 @@ function template(){
     `
 }
 
-mount(document.body,template)
+mount("#app",template)

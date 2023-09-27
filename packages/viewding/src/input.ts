@@ -1,4 +1,3 @@
-
 import {
     PropertyPart,
     Directive,
@@ -9,7 +8,7 @@ import {
     directive,
 } from '@viewding/lit-html'
 
-import { ReactiveRef } from './reactiveRef'
+import { ReactiveRef } from '@viewding/reactivity'
 
 type RefValue<T> = (value?: T) => T
 
@@ -22,37 +21,19 @@ function isSameArray(a1: any[], a2: any[]) {
     return true
 }
 
-// function parseInputValue(input: RefValue<any> | [string,object] | [object, string] | string): RefValue<any> {
-//     if( typeof input === 'function') return input
-//     if( Array.isArray(input)){
-//         if(typeof input[0] == 'string') return refProp(input[0], input[1])
-//         else  return refProp(input[1] as string, input[0])
-//     }
-//     return refProp(input)
-// }
-
-// function refProp(prop: string, obj?: any): RefValue<any> {
-//     if (!obj) obj = this
-//     return (value?) => {
-//         value!==undefined ? (obj[prop] = value) : obj[prop]
-//     }
-// }
-
-// ？？ 用上面返回包裹函数替代下面的getValue/setValue在运行时不正常，不清楚原因
-// todo：input取值为object时，默认object有value字段。
-function getValue(this:any,
-    input: RefValue<any> | [string, object] | [object, string] | string
+// input取值为object时，默认object有value字段。
+function getValue(
+    input: RefValue<any> | [object, string?] 
 ) {
     if (typeof input === 'function') return input()
     if (Array.isArray(input)) {
-        if (typeof input[0] == 'string') return (input[1] as any)[input[0]]
-        else return (input[0] as any)[input[1] as string]
+        if(!input[1] ) input[1] = "value"
+        return (input[0] as any)[input[1]]
     }
-    return this[input]
 }
 
 function setValue(this:any,
-    input: RefValue<any> | [string, object] | [object, string] | string,
+    input: RefValue<any> | [object, string?],
     value: any
 ) {
     if (typeof input === 'function') {
@@ -60,11 +41,10 @@ function setValue(this:any,
         return
     }
     if (Array.isArray(input)) {
-        if (typeof input[0] == 'string') (input[1] as any)[input[0]] = value
-        else (input[0] as any)[input[1] as string] = value
+        if(!input[1] ) input[1] = "value"
+        ;(input[0] as any)[input[1]] = value
         return
     }
-    this[input] = value
 }
 
 type InputOptions = {
@@ -88,7 +68,7 @@ function inputEventName(element: HTMLElement) {
 
 class RadioDirective extends Directive {
     _args?: any[]
-    inputValue?: ReactiveRef<any> | [string, object] | [object, string] | string
+    inputValue?: ReactiveRef<any> | [object, string?]
     element?: HTMLElement
     constructor(partInfo: PartInfo) {
         super(partInfo)
@@ -102,9 +82,7 @@ class RadioDirective extends Directive {
     render(
         inputValue:
             | ReactiveRef<any>
-            | [string, object]
-            | [object, string]
-            | string,
+            | [object, string?],
         inputOptions?: InputOptions
     ) {
         return nothing
@@ -186,7 +164,7 @@ class CheckDirective extends Directive {
 
 class ValueDirective extends Directive {
     _args: any
-    inputValue?: ReactiveRef<any> | [string, object] | [object, string] | string
+    inputValue?: ReactiveRef<any> | [object, string?]
     element?: HTMLElement
     constructor(partInfo: PartInfo) {
         super(partInfo)
@@ -198,9 +176,7 @@ class ValueDirective extends Directive {
     render(
         inputValue:
             | ReactiveRef<any>
-            | [string, object]
-            | [object, string]
-            | string,
+            | [object, string?],
         inputOptions?: InputOptions
     ) {
         return getValue(inputValue)
@@ -242,7 +218,7 @@ declare global {
 Object.defineProperty(HTMLSelectElement.prototype, '$values', {
     get() {
         if (this.options && this.multiple) {
-            const options = [...this.options]
+            const options:any[] = [...this.options]
             return options
                 .filter((option) => option.selected)
                 .map((option) => option.value)

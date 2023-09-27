@@ -1,10 +1,10 @@
-import { render, TemplateResult } from "@viewding/lit-html";
-import { ReactiveEffect} from '@viewding/reactivity'
+import { render, TemplateResult, RootPart } from "@viewding/lit-html";
+import { ReactiveEffect, effect, ReactiveEffectRunner} from '@viewding/reactivity'
 
 export function mount(
     element: string | HTMLElement,
     template: () => TemplateResult,
-    afterRender?: (isfirst: boolean) => void,
+    afterRender?: (rootPart: RootPart, isfirst: boolean) => void,
     beforeRender?: (isfirst: boolean) => boolean
 ) {
     let container = null as HTMLElement | null
@@ -23,19 +23,20 @@ export function mount(
     if(!container) return  // container maybe null
 
     let isFirst = true;
+
     asyncEffect(() => {
         if (beforeRender && !beforeRender(isFirst)) {
             return;
         }
-        render(template(), container!);
-        afterRender?.(isFirst);
+        const rootPart = render(template(), container!);
+        afterRender?.(rootPart, isFirst);
         isFirst = false;
     });
 }
 
-
 export function asyncEffect(fn: (...args:any[])=>void){
     // 挂起，指微任务已经加入到js的任务队列，但是尚未运行。
+    const effect = new ReactiveEffect(fn)
     let isUpdatePending = false
     function scheduler() {
         // 如果有挂起的任务，那么直接返回，等待挂起任务的执行时一并运行更新。
@@ -45,11 +46,22 @@ export function asyncEffect(fn: (...args:any[])=>void){
         window.queueMicrotask(()=>{
             // 更新任务一旦开始运行，状态就不再是挂起了，那么后续的更新就要启动新的更新任务。
             isUpdatePending = false
-            fn()
+            effect.run()
         })
         // 添加任务到队列到任务尚未执行这段时间的状态是挂起。
         isUpdatePending = true
     }
-    const effect = new ReactiveEffect(fn, scheduler)
+    //const effect = new ReactiveEffect(scheduler)
+    effect.scheduler = scheduler
     effect.run()
+}
+
+export const css = (strings: TemplateStringsArray, ...values: any[]) =>
+    String.raw({ raw: strings }, ...values)
+
+export function attachCss(styles: string) {
+    document.head.insertAdjacentHTML(
+        "beforeend",
+        `<style>${styles}</style>`
+    );
 }

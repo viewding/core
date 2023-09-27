@@ -1,4 +1,5 @@
-import { html,mount, reactiveRef, value, reactive } from 'viewding'
+import { html,mount, reactiveRef, value, attachCss, css, reactive } from 'viewding'
+
 import { polyGraph } from './polyGraph'
 
 const newLabel = reactiveRef('')
@@ -40,7 +41,7 @@ function template() {
                     <label>${stat.label}</label>
                     <input
                         type="range"
-                        .value=${value(['value',stat])}
+                        .value=${value([stat,"value"])}
                         min="0"
                         max="100"
                     />
@@ -57,35 +58,36 @@ function template() {
             <button @click=${add}>Add a Stat</button>
         </form>
 
-        <style>
-            polygon {
-                fill: #42b983;
-                opacity: 0.75;
-            }
-
-            circle {
-                fill: transparent;
-                stroke: #999;
-            }
-
-            text {
-                font-size: 10px;
-                fill: #666;
-            }
-
-            label {
-                display: inline-block;
-                margin-left: 10px;
-                width: 20px;
-            }
-
-            #raw {
-                position: absolute;
-                top: 0;
-                left: 300px;
-            }
-        </style>
     `
 }
 
-mount(document.body, template)
+attachCss(css`
+    polygon {
+        fill: #42b983;
+        opacity: 0.75;
+    }
+
+    circle {
+        fill: transparent;
+        stroke: #999;
+    }
+
+    text {
+        font-size: 10px;
+        fill: #666;
+    }
+
+    label {
+        display: inline-block;
+        margin-left: 10px;
+        width: 20px;
+    }
+
+    #raw {
+        position: absolute;
+        top: 0;
+        left: 300px;
+    }
+`)
+
+mount("#app", template)

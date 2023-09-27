@@ -14,10 +14,10 @@
 		"experimentalDecorators":true,
 		"target": "esnext",
 		"module": "esnext",
-		"outDir": "./dist/development",
+		"outDir": "temp",
 		"declaration": true,
 		"declarationMap": true,
-		"lib":["dom","ESNext","DOM.Iterable"]	
+		"lib":["dom","ESNext","DOM.Iterable"],
 	},
 	"include": ["src/*.ts","src/decorators/*.ts","src/dom/*.ts"],
 	"exclude": ["node_modules"]

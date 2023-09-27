@@ -1,4 +1,4 @@
-import { html, reactiveRef, mount, on } from 'viewding'
+import { html, reactiveRef, mount, on, attachCss, css } from 'viewding'
 
 const message = reactiveRef('Hello World!')
 
@@ -20,20 +20,19 @@ function template() {
         <button @click=${() => message(message() + '!')}>Append "!"</button>
 
         <!--
-            由于使用了once修饰符，第一次点击时显示aler，第二次点击时打开超链接。
+            由于使用了once修饰符，第一次点击时显示alert，第二次点击时打开超链接。
         -->
-        <a href="https://vuejs.org" @click=${on(notify,'prevent', 'once')}>
+        <a href="https://vuejs.org" @click=${on(notify,'prevent once')}>
             A link with e.preventDefault()
         </a>
-
-        <style>
-            button,
-            a {
-                display: block;
-                margin-bottom: 1em;
-            }
-        </style>
     `
 }
 
-mount(document.body, template)
+attachCss(css`
+    button, a {
+        display: block;
+        margin-bottom: 1em;
+    }
+`)
+
+mount("#app", template)

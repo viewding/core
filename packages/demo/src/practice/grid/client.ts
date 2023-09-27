@@ -1,5 +1,4 @@
-import { mount, reactiveRef, value } from 'viewding'
-import { html } from 'lit-html'
+import { html, mount, reactiveRef, value } from 'viewding'
 import './demoGrid'
 
 const searchQuery = reactiveRef('')
@@ -19,10 +18,10 @@ function template() {
         <demo-grid
             .data=${gridData}
             .columns=${gridColumns}
-            filter-key=${searchQuery()}
+            .filterKey=${searchQuery()}
         >
         </demo-grid>
     `
 }
 
-mount(document.body, template)
+mount("#app", template)

@@ -64,7 +64,7 @@ const withKeys = (fn: Function, modifiers: string[]) => {
 
 const listenerOptions=['once','passive','capture']
 
-export function eventHandler (fn: Function, modifiers: string){
+export function on (fn: Function, modifiers: string){
     const options = {}
     const guardModifiers:string[] = []
     const keyOptions:string[] = []
@@ -95,5 +95,5 @@ export function eventHandler (fn: Function, modifiers: string){
         handler = withKeys(handler,keyOptions)
     }
 
-    return {handleEvent:handler,options}
+    return {handleEvent:handler, ...options}
 }

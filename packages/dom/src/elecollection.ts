@@ -1,4 +1,4 @@
-import * as util from '../utils'
+import * as util from 'viewding/src/utils'
 export type Selector =
     | string
     | HTMLCollection

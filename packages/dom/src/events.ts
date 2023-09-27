@@ -1,4 +1,4 @@
-import {eventHandler} from '../eventHandler'
+import {on} from '../eventHandler'
 
 type EventCallback = (event: Event) => any
 
@@ -18,7 +18,7 @@ Element.prototype.$on = function(
 ){
     const wrappedHandler = (e:Event) => {callback.call(this,e)}
     if(modifiers){
-        this.addEventListener(event,eventHandler(wrappedHandler,modifiers))
+        this.addEventListener(event,on(wrappedHandler,modifiers))
     }
     else{
         this.addEventListener(event,wrappedHandler)
