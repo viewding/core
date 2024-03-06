@@ -12,7 +12,7 @@ export class ParameterTemplate extends HTMLTemplateElement{
 customElements.define('parameter-template', ParameterTemplate, {extends:'template'})
 
 // 在子元素位置使用的指令
-class RenderTemplateDirective extends Directive {
+class SlotRenderDirective extends Directive {
     parent?: HTMLElement;
     constructor(partInfo:PartInfo){
         super(partInfo)
@@ -20,8 +20,9 @@ class RenderTemplateDirective extends Directive {
     }
 
     // 把动态模板函数放到template元素的属性中。
-    // todo：
-    // 自动同一个父元素下兄弟元素中带同样slot属性名的template元素（如果不是参数化的模板，普通的template元素也可以）。
+    // todo: 
+    // 1. 用parent来找出 template 可能不合适，需要直接指定包含slot的自定义元素本身。
+    // 2. 自定义元素不使用template,直接包含元素作为default slot的元素时，如何区分自定义元素自己的子元素和default slot中的子元素？可以考虑：自定义元素支持一个 defaultTemplate 的自定义property，功能和template的render 一样，可以视作是自定义元素下直接包含名为default的template元素。
     render(name:string, defaultTemplate:(...params: unknown[])=>TemplateResult, ...params:unknown[] ){
         console.log("\n Render...")
         const template = Array.from(this.parent!.children).find((e)=>{
@@ -48,4 +49,4 @@ class RenderTemplateDirective extends Directive {
     }
 }
 
-export const renderTemplate = directive(RenderTemplateDirective) 
+export const slotRender = directive(SlotRenderDirective) 

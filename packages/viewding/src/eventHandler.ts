@@ -85,6 +85,7 @@ export function on (fn: Function, modifiers: string){
         for(const mod of guardModifiers){
             const guard = modifierGuards[mod]
             // guard为stop和prevent时，guard(...)返回值为假（void）, 所以不会导致return。
+            // guard为self时，如果e.target !== e.currentTarget就返回真。
             if (guard && guard(event, guardModifiers)) return
         }
         return fn(event, args)

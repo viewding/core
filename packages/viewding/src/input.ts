@@ -1,14 +1,8 @@
-import {
-    PropertyPart,
-    Directive,
-    PartInfo,
-    PartType,
-    noChange,
-    nothing,
-    directive,
-} from '@viewding/lit-html'
+/** @format */
 
-import { ReactiveRef } from '@viewding/reactivity'
+import { ElementPart, Directive, PartInfo, PartType, noChange, nothing, directive, DirectiveParameters } from "@viewding/lit-html"
+
+import { ReactiveRef } from "@viewding/reactivity"
 
 type RefValue<T> = (value?: T) => T
 
@@ -22,219 +16,196 @@ function isSameArray(a1: any[], a2: any[]) {
 }
 
 // input取值为object时，默认object有value字段。
-function getValue(
-    input: RefValue<any> | [object, string?] 
-) {
-    if (typeof input === 'function') return input()
-    if (Array.isArray(input)) {
-        if(!input[1] ) input[1] = "value"
-        return (input[0] as any)[input[1]]
+function getValue(input: ReactiveRef<any> | Array<any> | object, field?: string) {
+    if (typeof input === "function") return input()
+    if (field) {
+        return (input as any)[field]
     }
+
+    // input  is a Array
+    return input
 }
 
-function setValue(this:any,
-    input: RefValue<any> | [object, string?],
-    value: any
-) {
-    if (typeof input === 'function') {
+function setValue(value: any, input: RefValue<any> | Array<any> | object, fieldOrArrayOp?: string | boolean) {
+    if (typeof input === "function") {
         input(value)
         return
     }
-    if (Array.isArray(input)) {
-        if(!input[1] ) input[1] = "value"
-        ;(input[0] as any)[input[1]] = value
+    if (typeof fieldOrArrayOp === "string") {
+        ;(input as any)[fieldOrArrayOp] = value
         return
+    }
+
+    if (Array.isArray(input)) {
+        if(Array.isArray(value)) {
+            input.length = 0
+            input.push(value)
+        }
+        else {
+            const pos = input.indexOf(value)
+            if (fieldOrArrayOp == true) {
+                if (pos < 0) input.push(value)
+            } else {
+                if (pos >= 0) input.splice(pos, 1)
+            }
+        }
     }
 }
 
 type InputOptions = {
     eventName: string
-    valueProp: string // 当绑定check, radio时，valueProp用来指定checked时的取值。
     modifiers?: string
 }
 
 function inputEventName(element: HTMLElement) {
     const tag = element.tagName.toLowerCase()
-    if (tag === 'select') return 'change'
-    if (tag === 'textarea') return 'input'
-    if (tag === 'input') {
-        const type = (element as HTMLInputElement)['type']
-        return  type == 'checkbox' || type == 'radio'
-            ? 'change'
-            : 'input'
+    if (tag === "select") return "change"
+    if (tag === "textarea") return "input"
+    if (tag === "input") {
+        const type = (element as HTMLInputElement)["type"]
+        return type == "checkbox" || type == "radio" ? "change" : "input"
     }
-    return 'update'
+    return "update"
 }
 
-class RadioDirective extends Directive {
-    _args?: any[]
-    inputValue?: ReactiveRef<any> | [object, string?]
-    element?: HTMLElement
-    constructor(partInfo: PartInfo) {
-        super(partInfo)
-        if (partInfo.type !== PartType.PROPERTY) {
-            throw new Error('Error')
-        }
-    }
-
-    // ？？
-    // 可能对于自定义组件才会执行该方法，在浏览器中跟踪时，对于input来说，发现下述方法未被执行。
-    render(
-        inputValue:
-            | ReactiveRef<any>
-            | [object, string?],
-        inputOptions?: InputOptions
-    ) {
-        return nothing
-    }
-
-    update(part: PropertyPart, args: any[]) {
-        this.element = part.element as HTMLElement
-
-        this.inputValue = args[0]
-        const checkProp = part.name
-        const {
-            eventName = inputEventName(this.element),
-            valueProp = 'value',
-            modifiers,
-        } = args[1] || {}
-
-        const checked = (this.element as any)[valueProp!] == getValue(this.inputValue!)
-        if ((this.element as any)[checkProp!] != checked) {
-            (this.element as any)[checkProp!] = checked
-        }
-
-        if (isSameArray(this._args!, args)) return noChange
-        this._args = args
-
-        // 注册事件，跟踪用户的交互输入
-        this.element.addEventListener(eventName, () => {
-            if ((this.element as any)[checkProp!])
-                setValue(this.inputValue!, (this.element as any)[valueProp!])
-        })
-        return noChange
-    }
-}
-
-class CheckDirective extends Directive {
-    _args?: any
-    inputValue?: any[]
-    element?: HTMLElement
-    constructor(partInfo: PartInfo) {
-        super(partInfo)
-        if (partInfo.type !== PartType.PROPERTY) {
-            throw new Error('Error')
-        }
-    }
-
-    render(inputValue: any[], inputOptions?: InputOptions) {
-        return nothing
-    }
-
-    update(part: PropertyPart, args: any[]) {
-        this.element = part.element as HTMLElement
-
-        this.inputValue = args[0]
-        const checkProp = part.name
-        const {
-            eventName = inputEventName(this.element),
-            valueProp = 'value',
-            modifiers,
-        } = args[1] || {}
-
-        ;(this.element as any)[checkProp!] = this.inputValue!.includes(
-            (this.element as any)[valueProp!]
-        )
-
-        if (isSameArray(this._args, args)) return noChange
-        this._args = args
-
-        // 注册事件，跟踪用户的交互输入
-        this.element.addEventListener(eventName, () => {
-            const pos = this.inputValue!.indexOf((this.element as any)[valueProp!])
-            if ((this.element as any)[checkProp!]) {
-                if (pos < 0) this.inputValue!.push((this.element as any)[valueProp!])
+function setElementValue(
+    element: HTMLElement,
+    inputValue: ReactiveRef<any> | Array<any> | object,
+    field?: string
+) {
+    const v = getValue(inputValue, field)
+    const tag = element.tagName.toLowerCase()
+    if (tag === "input") {
+        const eleInput = element as HTMLInputElement
+        const type = eleInput["type"]
+        if (type == "checkbox" || type == "radio") {
+            const checked = eleInput.checked
+            const value = eleInput.value
+            if (Array.isArray(inputValue)) {
+                const pos = inputValue.indexOf(value)
+                eleInput.checked = pos >= 0
+            } else if (typeof v == "boolean") {
+                eleInput.checked = v
             } else {
-                if (pos >= 0) this.inputValue!.splice(pos, 1)
+                eleInput.checked = v == value
             }
-        })
-        return noChange
+            return
+        }
     }
+    if (tag === "select") {
+        const eleSelect = element as HTMLSelectElement
+        const options = [...eleSelect.options]
+        if (Array.isArray(inputValue)) {
+            options.map((option) => {
+                if (inputValue.includes(option.value)) {
+                    option.selected = true
+                }
+            })
+        } 
+        else if (Array.isArray(v)) {
+            options.map((option) => {
+                if (v.includes(option.value)) {
+                    option.selected = true
+                }
+            })
+        } 
+        else {
+            eleSelect.value = v
+        }
+        return
+    }
+
+    ;(element as any)["value"] = v
 }
 
-class ValueDirective extends Directive {
-    _args: any
-    inputValue?: ReactiveRef<any> | [object, string?]
-    element?: HTMLElement
-    constructor(partInfo: PartInfo) {
-        super(partInfo)
-        if (partInfo.type !== PartType.PROPERTY) {
-            throw new Error('Error')
+function updateListener(
+    element: HTMLElement,
+    inputValue: ReactiveRef<any> | Array<any> | object,
+    field?: string
+) {
+    let value: any
+    const tag = element.tagName.toLowerCase()
+    switch (tag) {
+        case "input":
+            value = (element as HTMLInputElement)["value"]
+            break
+        case "earea":
+            value = (element as HTMLTextAreaElement)["value"]
+            break
+        case "select":
+            const se = element as HTMLSelectElement
+            if (se.options && se.multiple) {
+                const options: any[] = [...se.options]
+                value = options.filter((option) => option.selected).map((option) => option.value)
+            } else {
+                value = se.value
+            }
+            break
+        default:
+            value = (element as any)["value"]
+    }
+
+    // 对check、radio做特殊处理
+    if (tag === "input") {
+        const type = (element as HTMLInputElement)["type"]
+        if (type == "checkbox" || type == "radio") {
+            const v = typeof getValue(inputValue)
+            const checked = (element as HTMLInputElement).checked
+            if (v == "boolean") {
+                setValue(checked, inputValue,field)
+            } else if (Array.isArray(inputValue)) {
+                setValue(value, inputValue, checked)
+            } else {
+                setValue(value, inputValue,field)
+            }
+            return
         }
     }
 
-    render(
-        inputValue:
-            | ReactiveRef<any>
-            | [object, string?],
-        inputOptions?: InputOptions
-    ) {
-        return getValue(inputValue)
+    setValue(value, inputValue, field)
+}
+
+class BindValueDirective extends Directive {
+    _args: any
+    inputValue?: ReactiveRef<any> | Array<any> | object
+    field?: string
+    element?: HTMLElement
+    updateListener?: (event: any) => void
+    constructor(partInfo: PartInfo) {
+        super(partInfo)
+        if (partInfo.type !== PartType.ELEMENT) {
+            throw new Error("Error")
+        }
     }
 
-    update(part: PropertyPart, args:any[]) {
+    render(inputValue:ReactiveRef<any> | Array<any> | object, field?: string, inputOptions?: InputOptions) {
+        return getValue(inputValue, field)
+    }
+
+    update(part: ElementPart,[inputValue, field, inputOptions]: DirectiveParameters<this>) {
         this.element = part.element as HTMLElement
-        this.inputValue = args[0]
-        const valueProp = part.name
-        const { eventName = inputEventName(this.element), modifiers } =
-            args[1] || {}
 
-        ;(this.element as any)[valueProp!] = getValue(this.inputValue!)
+        this.inputValue = inputValue
+        this.field = field
 
-        // 避免重复注册事件
-        if (isSameArray(this._args, args)) return noChange
-        this._args = args
+        let eventName = inputEventName(this.element)
+        if(inputOptions?.eventName){
+            eventName = inputOptions?.eventName
+        }
+        setElementValue(this.element, this.inputValue!, this.field)
+
+        // 避免重复注册事件, 否则每一次update render都会注册一个事件。
+        if (this.updateListener) return noChange
 
         // 注册事件，跟踪用户的交互输入
         const eventHandler = () => {
-            setValue(this.inputValue!, (this.element as any)[valueProp!])
+            updateListener(this.element!, this.inputValue!, this.field)
         }
         this.element.addEventListener(eventName, eventHandler)
+        this.updateListener = eventHandler
         return noChange
     }
 }
 
 // Create the directive function
-export const value = directive(ValueDirective)
-export const radio = directive(RadioDirective)
-export const check = directive(CheckDirective)
-
-declare global {
-    export interface HTMLSelectElement {
-        get $values(): string | string[]
-        set $values(value: string | string[])
-    }
-}
-Object.defineProperty(HTMLSelectElement.prototype, '$values', {
-    get() {
-        if (this.options && this.multiple) {
-            const options:any[] = [...this.options]
-            return options
-                .filter((option) => option.selected)
-                .map((option) => option.value)
-        } else {
-            return this.value
-        }
-    },
-    set(value) {
-        const values = value instanceof Array ? value : [value]
-        const options = [...this.options]
-        options.map((option) => {
-            if (values.includes(option.value)) {
-                option.selected = true
-            }
-        })
-    },
-    enumerable: true,
-    configurable: false,
-})
+export const bindValue = directive(BindValueDirective)

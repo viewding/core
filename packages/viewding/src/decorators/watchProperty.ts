@@ -1,26 +1,29 @@
 import { PropertyDefine } from "../customElement";
 
-const legacyProperty = (
-    options: PropertyDefine,
-    proto: Object,
-    name: PropertyKey
-  ) => {
-    (proto.constructor as any).properties[name] = options
-  };
-  
-export function watch(options?: PropertyDefine) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (protoOrDescriptor: Object , name?: PropertyKey): any =>{
-      if(options===undefined) options = {}
-      if(options.attribute === undefined){ options.attribute = false }
-      legacyProperty(options, protoOrDescriptor as Object, name!)
+export function watch(options?: Omit<PropertyDefine,"isWatched">) {
+    return (protoOrDescriptor: Object , name: PropertyKey): any =>{
+      const properties = (protoOrDescriptor.constructor as any).properties
+
+      if (properties[name] === undefined){
+        properties[name] = {attribute: false}
+      }
+
+      Object.assign(properties[name], options)
     }
   }
 
-export function attr(options?: Omit<PropertyDefine,"attribute">) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (protoOrDescriptor: Object , name?: PropertyKey): any =>{
-      legacyProperty({attribute:true, ...options}, protoOrDescriptor as Object, name!)
+// 设置Property的关联Attribute，当Attribute改变时，自动修改Property的值。但是，当Property改变时不影响Attribute的值。
+export function watchAttr(attribute?:boolean|string) {
+    return (protoOrDescriptor: Object , name: PropertyKey): any =>{
+      const properties = (protoOrDescriptor.constructor as any).properties
+
+      if (properties[name] === undefined){
+        properties[name] = {attribute: true}
+      }
+
+      if(attribute!==undefined){
+        properties[name].attribute = attribute
+      }
     }
 }
 

@@ -17,7 +17,7 @@ export interface PropertyDefine<Type = unknown> {
      * 一般来说，简单数据类型的property都有对应的attribute，对象类型的property往往没有对应的attribute。
      * 如果property是对象类型，并且设置了attribute，那么默认的attribute采用json格式的字符串来表示object的值。
      */
-    attribute?: boolean | string
+    attribute: boolean | string
 
     // 属性值是否发生了变化的检测函数，。
     hasChanged?(value: Type, oldValue: Type): boolean
@@ -104,9 +104,9 @@ type Constructor<T = {}> = new (...args: any[]) => T
 export type Hook = "BeforeRender" | "AfterRender" | "Connected" | "Disconnected"
 export type HookCallBack = (isFirst?: boolean) => void
 
-// shadowRootOptions在createRenderRoot()中使用，createRenderRoot的默认行为是：
-// 当shadowRootOptions = undefined时，shadowRoot取值为this，即元素自身，不使用ShadowDOM技术来构建元素。
-// 当shadowRootOptions非空时，shadowRoot取值为Element.attachShadow(shadowRootOptions)的返回值。
+// shadowRootOptions取值如下：
+// 取值undefined时，this.renderRoot为this，即元素自身，不使用ShadowDOM技术来构建元素。
+// 取值ShadowRootInit，this.renderRoot为Element.attachShadow(shadowRootOptions)的返回值。
 export function customizeElement<T extends Constructor<HTMLElement>>(
     superClass = HTMLElement as T,
     shadowRootOptions?: ShadowRootInit,
@@ -116,14 +116,13 @@ export function customizeElement<T extends Constructor<HTMLElement>>(
         static properties: { [key: string]: PropertyDefine<unknown> } = {}
 
         // 映射表<attribute-name, properyName>
-        // a
         static __attributeToPropertyMap = new Map<string, PropertyKey>()
 
         // 获取propery对应的attribute名称。
         static __attributeNameForProperty(name: PropertyKey, options: PropertyDefine) {
             const attribute = options.attribute
 
-            // 如果 attribute===undefined, 那么返回对应propName的短划线名称。
+            // 如果 attribute===true, 那么返回对应propName的短划线名称。
             return attribute === false
                 ? undefined
                 : typeof attribute === "string"
@@ -152,17 +151,26 @@ export function customizeElement<T extends Constructor<HTMLElement>>(
 
         defineProperties() {
             for (const [p, propOpt] of Object.entries((this.constructor as typeof BaseElement).properties)) {
-                // 可以在注解或者静态属性properties中提供实例property的初始值。
-                // 否则，如果是通过class的声明语法提供初始值，那么只有在类装饰器中获取。
-                const proto = (this.constructor as typeof BaseElement).prototype
-                if (propOpt.initValue !== undefined) {
-                    ;(this as BaseElement).props[p] = propOpt.initValue
-                }
 
-                // 说明：下述语句事实上永远不会执行，不论是否使用 useDefineForClassFields 来生成属性，执行defineProperties时还在基类的构造函数中，只有执行到子类的构造函数时才产生子类的自定义属性（两种方式都一样，一种是在构造中生成 this.xxx=vvvv语句，一种是在this实例中生成属性描述符）
+                // 关于propOpt.initValue的说明：
+                // 下述语句事实上永远不会执行，不论是否使用 useDefineForClassFields 来生成属性，执行defineProperties时还在基类的构造函数中，只有执行到子类的构造函数时才产生子类的自定义属性（两种方式都一样，一种是在构造中生成 this.xxx=vvvv语句，一种是在this实例中生成属性描述符）
                 // else if (this[p] !== undefined ){
                 //     (this as BaseElement).props[p] = this[p]
                 // }
+                // 所以，无法从class的属性声明语法中获得初始值，只能通过如下两种方式获得初始值：
+                // 1. 属性的装饰器注解
+                // 2. 设置静态属性properties。
+
+                // 目前的实现要求：必须在TSC编译时把defineProperties设置为false，此时，在子类中会生成如下语句, 否则，TSC生成的子类会把defineProperties()中定义的属性覆盖掉。
+                // this.xxx = vvvv
+                // 在该语句执行时，会触发defineProperties()中定义的属性，从而完成props中初始值的设置和propertyDefine中initValue的设置。
+
+                // todo：这一个限制的解决的方法可能是，同时使用属性和类的装饰器，在装饰器中，删除掉自动生成的ClassFields，同时把删除掉的ClassField中的初始值复制到props中。
+
+                // 如果设置了propOpt.initValue, 那么赋值给 props。
+                if (propOpt.initValue !== undefined) {
+                    ;(this as BaseElement).props[p] = propOpt.initValue
+                }
 
                 const descriptor = this.getPropertyDescriptor(p, propOpt)
                 if (descriptor !== undefined) {
@@ -180,17 +188,16 @@ export function customizeElement<T extends Constructor<HTMLElement>>(
                 },
                 set(this: BaseElement, value: unknown) {
                     const oldValue = (this as BaseElement).props[name as string]
-                    // 第一次给属性赋值时，如果属性定义中尚未设置初始值，那么设为初始值，同时给没有设置的属性定义赋初始值。
+                    // 如果props[name]没有值，那么在set时完成props中初始值的设置和propertyDefine中initValue的设置。。
+                    // 这个行为一般发生在子类定义中 this.xxxxx = vvvv语句执行时。          
                     if (oldValue == undefined && value != undefined) {
                         ;(this as BaseElement).props[name as string] = value
                         const opt = (this.constructor as typeof BaseElement).properties[name.toString()]
                         if (opt.initValue == undefined) {
-                            if (opt.type == undefined) {
-                                opt.type = typeof value
-                            }
-                            if (opt.attribute == undefined) {
-                                opt.attribute = value instanceof Object ? false : true
-                            }
+                            opt.initValue = value
+                        }
+                        if (opt.type == undefined) {
+                            opt.type = typeof value
                         }
                         return
                     }
@@ -204,7 +211,7 @@ export function customizeElement<T extends Constructor<HTMLElement>>(
             }
         }
 
-        // 用实例方法方法属性的定义。
+        // 用实例方法获取属性的定义。
         getPropertyOptions(name: PropertyKey) {
             return (this.constructor as typeof BaseElement).properties[name.toString()]
         }
@@ -233,52 +240,54 @@ export function customizeElement<T extends Constructor<HTMLElement>>(
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 ) as any
 
-                // !!重要：避免循环调用，要保证 value === fromAttr(toAttr(value))
+                // 出于性能的考虑，避免不必要的赋值。
                 if (this.props[propName] != newValue) {
                     this.props[propName] = newValue
                 }
+                const hasChanged = options.hasChanged || notEqual
+                if (hasChanged(newValue, this.props[propName])) {
+                    ;(this as BaseElement).props[name as string] = value
+                }
+
             }
         }
 
-        declare innateClasses: { add?: string; remove?: string }
-        declare innateStyles: Record<string, string | number | undefined | null>
+        getInnateClasses(): Record<string, boolean | undefined | null>{
+            return {}
+        }
+        getInnateStyles(): Record<string, string | number | undefined | null>{
+            return {}
+        }
         #previousStyles?: Set<string>
 
-        renderClasses() {
-            if (this.innateClasses.add) {
-                let addList = this.innateClasses.add.split(" ")
-                for (const add of addList) {
-                    if (add.trim().length == 0) continue
-                    this.classList.toggle(add, true)
+        updateInnateClasses() {
+            const classes = this.getInnateClasses()
+            for (const name in classes) {
+                const value = classes[name]
+                if(value){
+                    this.classList.toggle(name, true)
                 }
-            }
-
-            if (this.innateClasses.remove) {
-                let removeList = this.innateClasses.remove.split(" ")
-                for (const remove of removeList) {
-                    this.classList.toggle(remove, false)
+                else {
+                    this.classList.toggle(name, false)
                 }
             }
         }
 
-        renderStyles() {
+        updateInnateStyles() {
             const important = "important"
             // The leading space is important
             const importantFlag = " !" + important
             // How many characters to remove from a value, as a negative number
             const flagTrim = 0 - importantFlag.length
-
-            let isFirst = false
+            const styles = this.getInnateStyles()
             if (this.#previousStyles === undefined) {
-                this.#previousStyles = new Set(Object.keys(this.innateStyles))
-                isFirst = true
+                this.#previousStyles = new Set(Object.keys(styles))
             }
-
-            // Remove old properties that no longer exist in styleInfo
-            if (!isFirst) {
+            else{
+                // Remove old properties that no longer exist in styleInfo
                 for (const name of this.#previousStyles) {
                     // If the name isn't in styleInfo or it's null/undefined
-                    if (this.innateStyles[name] == null) {
+                    if (styles[name] == null) {
                         this.#previousStyles!.delete(name)
                         if (name.includes("--")) {
                             this.style.removeProperty(name)
@@ -290,8 +299,8 @@ export function customizeElement<T extends Constructor<HTMLElement>>(
                 }
             }
             // Add or update properties
-            for (const name in this.innateStyles) {
-                const value = this.innateStyles[name]
+            for (const name in styles) {
+                const value = styles[name]
                 if (value != null) {
                     this.#previousStyles.add(name)
                     const isImportant = typeof value === "string" && value.endsWith(importantFlag)
@@ -329,25 +338,17 @@ export function customizeElement<T extends Constructor<HTMLElement>>(
                     }
                 }
             })
-
-            this.renderClasses()
-            this.renderStyles()
         }
 
         declare props: any
 
         constructor(...args: any[]) {
             super()
-            this.props = reactive({})
-            this.innateClasses = reactive({}) as {
-                add?: string
-                remove?: string
-            }
-            this.innateStyles = reactive({}) as Record<string, string | number | undefined | null>
 
-            // 目前的实现必须在TSC编译时把defineProperties设置为false，否则，子类会把下述属性定义覆盖掉。
-            // todo：解决的方法是同时使用属性和类的装饰器，在装饰器中，删除掉自动生成的ClassFields，同时把删除掉的ClassField中的初始值复制到props中。
-            this.defineProperties()
+            if(isReactive){
+                this.props = reactive({}) 
+                this.defineProperties()
+            }
         }
 
         /**
@@ -379,6 +380,10 @@ export function customizeElement<T extends Constructor<HTMLElement>>(
             const callRender = (isFirst?: boolean) => {
                 this.__callBackhooks.get("BeforeRender")?.forEach((cb) => cb(isFirst))
 
+                this.updateAttribute()
+                this.updateInnateClasses()
+                this.updateInnateStyles()
+
                 this.render(isFirst)
 
                 this.__callBackhooks.get("AfterRender")?.forEach((cb) => cb(isFirst))
@@ -409,8 +414,6 @@ export function customizeElement<T extends Constructor<HTMLElement>>(
 
         // render()的默认实现是调用lit-html中的render方法实现挂载刷新视图的功能。
         render(isFirst?: boolean) {
-            this.updateAttribute(isFirst)
-
             if (this.template) {
                 render(this.template(), this.renderRoot, { host: this })
             }
@@ -438,8 +441,8 @@ export const reactiveElement = <T extends Constructor<HTMLElement>>(
 
 export interface CustomElement extends HTMLElement {
     render(isFirst?: boolean): void
-    innateClasses: { add?: string; remove?: string }
-    innateStyles: Record<string, string | number | undefined | null>
+    getInnateClasses(): Record<string, boolean | undefined | null>
+    getInnateStyles(): Record<string, string | number | undefined | null>
     onCallback(hook: Hook, cb: () => void): void
     connectedCallback(): void
 }

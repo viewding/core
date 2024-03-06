@@ -1,11 +1,20 @@
 import { render, TemplateResult, RootPart } from "@viewding/lit-html";
 import { ReactiveEffect, effect, ReactiveEffectRunner} from '@viewding/reactivity'
 
+export type MountOptions  = {
+    host?:object,
+    creationScope?: {importNode: (node: Node, deep?: boolean) => Node},
+    isConnected?: boolean,
+    renderBefore?: ChildNode | null;
+    afterRender?: (rootPart: RootPart, isfirst: boolean) => void,
+    beforeRender?: (isfirst: boolean) => boolean
+}
+
+// mount 是对lit-html的render的扩展，添加了响应式渲染的能力。
 export function mount(
     element: string | HTMLElement,
     template: () => TemplateResult,
-    afterRender?: (rootPart: RootPart, isfirst: boolean) => void,
-    beforeRender?: (isfirst: boolean) => boolean
+    options?: MountOptions
 ) {
     let container = null as HTMLElement | null
     if(typeof element=="string"){
@@ -25,11 +34,16 @@ export function mount(
     let isFirst = true;
 
     asyncEffect(() => {
-        if (beforeRender && !beforeRender(isFirst)) {
+        if (options?.beforeRender && !options?.beforeRender(isFirst)) {
             return;
         }
-        const rootPart = render(template(), container!);
-        afterRender?.(rootPart, isFirst);
+        const rootPart = render(template(), container!,{
+            host:   options?.host,
+            creationScope:  options?.creationScope,
+            isConnected:    options?.isConnected,
+            renderBefore: options?.renderBefore
+        });
+        options?.afterRender?.(rootPart, isFirst);
         isFirst = false;
     });
 }

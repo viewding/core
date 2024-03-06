@@ -19,6 +19,6 @@
 		"declarationMap": true,
 		"lib":["dom","ESNext","DOM.Iterable"],
 	},
-	"include": ["src/*.ts","src/decorators/*.ts","src/dom/*.ts"],
+	"include": ["src/*.ts","src/decorators/*.ts", "src/input.ts-"],
 	"exclude": ["node_modules"]
 }

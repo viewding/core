@@ -78,44 +78,6 @@ export const doc = {
     }
 }
 
-declare global {
-    export interface String{
-        $unwrap(start:string, end?:string): string
-    }
-}
-
-// wrap有两种形式, 
-// 1. 两个字符："<startChar><endChar>"， 如: "{}", "<>"等
-// 2. 以空格分隔的两个字符串："<startString> <endString>，如"<p> </p>", "{ }"等
-function _unwrap(this:string, wrap:string){
-    wrap = wrap.trim()
-    if (wrap.length<2) return this
-
-    let start = ""
-    let end = ""
-    if(wrap.length==2){
-            start = wrap[0]
-            end = wrap[1]
-    }
-    else{
-        let se = wrap.split(' ')
-        if(se.length==2){
-            start = se[0]
-            end = se[1]
-        }
-    }
-    
-    if (start===""|| end==="") return this
-    
-    let str = this.trim()
-    if(str.startsWith(start) && str.endsWith(end)){
-        return str.substring(start.length,str.length - end.length)
-    }
-    return this
-}
-
-String.prototype.$unwrap = _unwrap
-
 type PlainObject<T> = Record<string, T>
 
 export function isNumeric(value: unknown): value is number {
