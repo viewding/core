@@ -1,0 +1,9 @@
+{
+    "title": "svg",
+    "description": "svg 图像.",
+    "files": {
+      "treeItem.ts": {},
+      "client.ts": {},
+      "index.html": {}
+    }
+  }

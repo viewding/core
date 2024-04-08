@@ -1,0 +1,11 @@
+{
+    "title": "svg",
+    "description": "svg 图像.",
+    "files": {
+      "util.ts": {},
+      "axisLabel.ts": {},
+      "polyGraph.ts": {},
+      "client.ts": {},
+      "index.html": {}
+    }
+  }

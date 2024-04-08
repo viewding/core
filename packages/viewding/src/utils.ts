@@ -122,3 +122,36 @@ export function isDocumentFragment(value: Node): value is DocumentFragment {
 export function isElement(value: Node): value is Element {
     return !!value && value.nodeType === Node.ELEMENT_NODE
 }
+
+export const objectToString = Object.prototype.toString
+export const toTypeString = (value: unknown): string =>
+  objectToString.call(value)
+
+export const isArray = Array.isArray
+export const isMap = (val: unknown): val is Map<any, any> =>
+  toTypeString(val) === '[object Map]'
+export const isSet = (val: unknown): val is Set<any> =>
+  toTypeString(val) === '[object Set]'
+
+export const isDate = (val: unknown): val is Date =>
+  toTypeString(val) === '[object Date]'
+export const isRegExp = (val: unknown): val is RegExp =>
+  toTypeString(val) === '[object RegExp]'
+export const isFunction = (val: unknown): val is Function =>
+  typeof val === 'function'
+export const isString = (val: unknown): val is string => typeof val === 'string'
+export const isSymbol = (val: unknown): val is symbol => typeof val === 'symbol'
+export const isObject = (val: unknown): val is Record<any, any> =>
+  val !== null && typeof val === 'object'
+
+export const isPromise = <T = any>(val: unknown): val is Promise<T> => {
+  return isObject(val) && isFunction(val.then) && isFunction(val.catch)
+}
+/**
+ * Only conerces number-like strings
+ * "123-foo" will be returned as-is
+ */
+export const toNumber = (val: any): any => {
+    const n = isString(val) ? Number(val) : NaN
+    return isNaN(n) ? val : n
+  }

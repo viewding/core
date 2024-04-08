@@ -1,0 +1,23 @@
+{
+	"compilerOptions": {
+		"isolatedModules": true,
+		"moduleResolution":"node",
+		"resolveJsonModule": true,
+		"allowJs": true,
+		"checkJs": false,
+		"useDefineForClassFields": false,
+		"esModuleInterop": true,
+		"forceConsistentCasingInFileNames": true,
+		"skipLibCheck": true,
+		"sourceMap": true,
+		"strict": true,
+		"experimentalDecorators":true,
+		"target": "es2017",
+		"module": "es2022",
+		"outDir": "temp",
+		"declaration": true,
+		"lib":["dom","ESNext","DOM.Iterable"]
+	},
+	"include": ["src/**/*.ts"],
+	"exclude": ["node_modules"]
+}

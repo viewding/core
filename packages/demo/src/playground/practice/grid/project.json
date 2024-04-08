@@ -1,0 +1,9 @@
+{
+    "title": "svg",
+    "description": "svg 图像.",
+    "files": {
+      "demoGrid.ts": {},
+      "client.ts": {},
+      "index.html": {}
+    }
+  }

@@ -1,3 +1,5 @@
+import { attachCss } from "../mount"
+import { reactiveElement } from "../reactiveElement"
 import { toHyphen } from "../utils"
 
 // 需要特别注意的是：
@@ -23,9 +25,9 @@ export function defineElement(
         }
     }
 
-    return function(clazz: CustomElementConstructor){
+    return function(clazz: ReturnType<typeof reactiveElement>){
         if (tagName === undefined || tagName === '') {
-            tagName = toHyphen((clazz as Function).name)
+            tagName = toHyphen(clazz.name)
         }
 
         if (baseTag === undefined) {
@@ -36,7 +38,9 @@ export function defineElement(
             })
         }
 
+        if( clazz.styles && clazz.styles().trim() !== '' ){
+            attachCss(`@scope (${tagName}){${clazz.styles()}}`)
+        }
         return clazz as any
     }
-
 }

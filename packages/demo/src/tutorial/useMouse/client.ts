@@ -1,11 +1,11 @@
-import {html, reactiveElement, defineElement} from "viewding"
+import * as vd from "viewding"
 import {useMouse} from "./mouse"
 
-@defineElement()
-export class MouseTrack extends reactiveElement() {
+@vd.defineElement()
+export class MouseTrack extends vd.reactiveElement() {
     private mouse = useMouse(this)
 
     template(){
-        return html`<h3 >MOUSE POSITION IS : ${this.mouse.x},${this.mouse.y}</h3>`
+        return vd.html`<h3 >MOUSE POSITION IS : ${this.mouse.x},${this.mouse.y}</h3>`
     }
 }

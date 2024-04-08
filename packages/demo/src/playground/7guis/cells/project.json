@@ -1,0 +1,10 @@
+{
+    "title": "svg",
+    "description": "svg 图像.",
+    "files": {
+      "cellsBox.ts": {},
+      "store.ts": {},
+      "client.ts": {},
+      "index.html": {}
+    }
+  }

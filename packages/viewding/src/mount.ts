@@ -1,14 +1,16 @@
 import { render, TemplateResult, RootPart } from "@viewding/lit-html";
-import { ReactiveEffect, effect, ReactiveEffectRunner} from '@viewding/reactivity'
+import { ReactiveEffect} from '@viewding/reactivity'
 
 export type MountOptions  = {
     host?:object,
     creationScope?: {importNode: (node: Node, deep?: boolean) => Node},
     isConnected?: boolean,
-    renderBefore?: ChildNode | null;
+    renderBefore?: ChildNode | null,
     afterRender?: (rootPart: RootPart, isfirst: boolean) => void,
     beforeRender?: (isfirst: boolean) => boolean
 }
+
+// template参数为 一个对象时支持过渡指令。过渡指令需要一个过渡上下文，而创建过渡上下文对象需要一个渲染上下文。
 
 // mount 是对lit-html的render的扩展，添加了响应式渲染的能力。
 export function mount(
@@ -65,17 +67,46 @@ export function asyncEffect(fn: (...args:any[])=>void){
         // 添加任务到队列到任务尚未执行这段时间的状态是挂起。
         isUpdatePending = true
     }
-    //const effect = new ReactiveEffect(scheduler)
     effect.scheduler = scheduler
     effect.run()
+    return effect
 }
 
 export const css = (strings: TemplateStringsArray, ...values: any[]) =>
     String.raw({ raw: strings }, ...values)
 
+export type CssResult = ReturnType<typeof css>    
+
+const stylesList = [] as string[]
+let isConstentLoaded = false
+let isListening = false
+
+// 通过在页面的<head>末尾插入<style>来添加样式，页面加载结束后每次调用都插入新的<style>,
+// 在页面加载结束前，每次调用需要添加的样式都收集到stylesList中，在页面加载结束时合并插入到一个<style>中。
 export function attachCss(styles: string) {
-    document.head.insertAdjacentHTML(
-        "beforeend",
-        `<style>${styles}</style>`
-    );
+    const insertCss = (css: string) =>{
+        if( !css || css.trim() === '' ) return ;
+        document.head.insertAdjacentHTML(
+            "beforeend",
+            `<style>${css}</style>`
+        );
+    }
+    if ( !isConstentLoaded ){
+        if(!isListening) {
+            // 此时加载尚未完成
+            document.addEventListener("DOMContentLoaded", ()=>{
+                insertCss(stylesList.join("\n"))
+                isConstentLoaded = true
+            });
+            isListening = true;
+        }
+        if( styles && styles.trim() !== '' ){
+            stylesList.push(styles)
+        }
+    }
+    else {
+        // `DOMContentLoaded` 已经被触发
+        insertCss(styles)
+    }
 }
+

@@ -1,4 +1,4 @@
-import { html,defineElement,reactive, reactiveElement } from 'viewding'
+import html, * as vd  from "viewding/src"
 
 const contextKey ='context-demo'
 
@@ -9,15 +9,22 @@ window.document.body.$provide(contextKey,{
     text: 'inject Context DATA is OK!',
 })
 
-@defineElement()
-export class ContextDemo extends reactiveElement() {
-    contextValue = reactive({ value: 'default' }) as any
-    constructor(...args) {
-        super(args)
-        this.onCallback("Connected",()=>{
-            this.contextValue.value = this.$inject(contextKey)
-        })
+@vd.defineElement()
+export class ContextDemo extends vd.ReactiveHTMLElement {
+    contextValue = vd.reactive({ value: 'default' }) as any
+    // constructor(...args) {
+    //     super(args)
+    //     this.onCallback("Connected",()=>{
+    //         this.contextValue.value = this.$inject(contextKey)
+    //     })
         
+    // }
+    // connectedCallback(): void {
+    //     this.contextValue.value = this.$inject(contextKey)
+    //     super.connectedCallback()
+    // }
+    init(){
+        this.contextValue.value = this.$inject(contextKey)
     }
 
     template() {

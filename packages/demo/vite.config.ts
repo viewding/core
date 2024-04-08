@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite'
 import path from 'path'
 import { promises as fs } from "fs"
+import mime from './script/mime.js'
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -10,14 +11,17 @@ export default defineConfig({
             '~': path.resolve(__dirname, ''),
         }
     },
-    plugins: [dontTransform()],
+    optimizeDeps: {
+        exclude: ['playground-elements','lightningcss-wasm'],
+    },
+    plugins: [dontTransform("/playground/basic/","/playground/practice/","/playground/7guis/")],
     build: {
         target:"esnext",
-        outDir: 'dist',
+        outDir: '../dist',
         manifest: true,
         rollupOptions:{
             input: {
-                'test/playground': path.resolve(__dirname, 'src/test/playground/index.html')
+                'playground': path.resolve(__dirname, 'src/playground/index.html')
             },
             external:["@viewding/lit-html","@viewding/reactivity"]
         }
@@ -28,26 +32,24 @@ export default defineConfig({
 
 })
 
-function dontTransform() {
+function dontTransform(...paths:string[]) {
     return {
         name: "vite-plugin-dont-transform",
         enforce: "pre" as 'pre',
-        configureServer(server) {
-            server.middlewares.use(async (req, res, next) => {
+        configureServer(server:any) {
+            server.middlewares.use(async (req:any, res:any, next:any) => {
                 const uri = req.url as string
-                let data: [string, string] | undefined
                 console.log(uri)
 
-                if (uri.includes("playground/svg") && (uri.endsWith(".ts") || uri.endsWith(".js") ) ) {
-                    data = [
-                        "application/javascript",
-                        await fs.readFile(`${server.config.root}${uri}`, "utf-8"),
-                    ]
-                }
+                if (paths.filter((item)=>uri.includes(item) ).length > 0) {
+                    const data = await fs.readFile(`${server.config.root}${uri}`, "utf-8")
+                    const exts = Object.keys(mime).filter(x => uri.endsWith("."+x));
 
-                if (data) {
-                    res.setHeader("Content-Type", data[0])
-                    res.end(data[1])
+                    if (exts.length !== 0) {
+                        res.setHeader('Content-Type', (mime as any)[exts[0]])
+                    } 
+                 
+                    res.end(data)
                     return
                 }
 
@@ -56,4 +58,3 @@ function dontTransform() {
         },
     } // return plugin object
 }
-

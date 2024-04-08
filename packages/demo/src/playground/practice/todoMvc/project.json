@@ -1,0 +1,8 @@
+{
+    "title": "svg",
+    "description": "svg 图像.",
+    "files": {
+      "client.ts": {},
+      "index.html": {}
+    }
+  }
